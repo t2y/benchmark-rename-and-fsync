@@ -13,9 +13,10 @@ const (
 )
 
 var (
-	size             int
-	testDir          string
-	argSyncFileRange int
+	size              int
+	testDir           string
+	argSyncFileRange  int
+	flagSyncFileRange string
 
 	seq *Sequence
 )
@@ -38,6 +39,7 @@ func init() {
 	flag.IntVar(&size, "size", 1, "size of writing file (KB)")
 	flag.StringVar(&testDir, "testDir", "testdata", "test data directory")
 	flag.IntVar(&argSyncFileRange, "syncFileRange", defaultSyncFileRange, "size of sync_file_range(B)")
+	flag.StringVar(&flagSyncFileRange, "syncFileRangeFlag", "write", "flag for sync_file_range")
 
 	seq = &Sequence{}
 }

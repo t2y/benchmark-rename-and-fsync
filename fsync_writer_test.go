@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func createFsyncFile(t testing.TB, path string, size, syncFileRange int) {
+func createFsyncFile(t testing.TB, path string, size, syncFileRange int, flagSyncFileRange string) {
 	tmp, err := NewTempFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	w := NewFsyncWriter(tmp, syncFileRange)
+	w := NewFsyncWriter(tmp, syncFileRange, flagSyncFileRange)
 	if _, err := io.CopyN(w, genData(size), int64(size)); err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func createFsyncFile(t testing.TB, path string, size, syncFileRange int) {
 func TestFsyncWriter(t *testing.T) {
 	dir := makeDir("fsync")
 	path := fmt.Sprintf("%s/writer.txt", dir)
-	createFsyncFile(t, path, 2*MiB+1, argSyncFileRange)
+	createFsyncFile(t, path, 2*MiB+1, argSyncFileRange, flagSyncFileRange)
 }
 
 func BenchmarkFsyncWriter(b *testing.B) {
@@ -36,6 +36,6 @@ func BenchmarkFsyncWriter(b *testing.B) {
 			dir = makeDir("fsync")
 		}
 		path := fmt.Sprintf("%s/%04d.txt", dir, i)
-		createFsyncFile(b, path, size*KiB, argSyncFileRange)
+		createFsyncFile(b, path, size*KiB, argSyncFileRange, flagSyncFileRange)
 	}
 }

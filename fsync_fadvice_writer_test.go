@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func createFsyncFadviceFile(t testing.TB, path string, size, syncFileRange int) {
+func createFsyncFadviceFile(t testing.TB, path string, size, syncFileRange int, flagSyncFileRange string) {
 	tmp, err := NewTempFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	w := NewFsyncFadviceWriter(tmp, syncFileRange)
+	w := NewFsyncFadviceWriter(tmp, syncFileRange, flagSyncFileRange)
 	if _, err := io.CopyN(w, genData(size), int64(size)); err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func createFsyncFadviceFile(t testing.TB, path string, size, syncFileRange int) 
 func TestFsyncFadviceWriter(t *testing.T) {
 	dir := makeDir("fsync+fadvice")
 	path := fmt.Sprintf("%s/writer.txt", dir)
-	createFsyncFadviceFile(t, path, 2*MiB+1, argSyncFileRange)
+	createFsyncFadviceFile(t, path, 2*MiB+1, argSyncFileRange, flagSyncFileRange)
 }
 
 func BenchmarkFsyncFadviceWriter(b *testing.B) {
@@ -36,6 +36,6 @@ func BenchmarkFsyncFadviceWriter(b *testing.B) {
 			dir = makeDir("fsync+fadvice")
 		}
 		path := fmt.Sprintf("%s/%04d.txt", dir, i)
-		createFsyncFadviceFile(b, path, size*KiB, argSyncFileRange)
+		createFsyncFadviceFile(b, path, size*KiB, argSyncFileRange, flagSyncFileRange)
 	}
 }

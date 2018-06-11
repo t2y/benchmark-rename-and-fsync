@@ -7,21 +7,23 @@ import (
 )
 
 type FsyncFadviceWriter struct {
-	t             *TempFile
-	syncFileRange int64
-	syncOffset    int64
-	syncLen       int64
+	t                 *TempFile
+	syncFileRange     int64
+	syncOffset        int64
+	syncLen           int64
+	flagSyncFileRange int
 }
 
-func NewFsyncFadviceWriter(tmp *TempFile, syncFileRange int) (w io.WriteCloser) {
+func NewFsyncFadviceWriter(tmp *TempFile, syncFileRange int, flagSyncFileRange string) (w io.WriteCloser) {
 	return &FsyncFadviceWriter{
-		t:             tmp,
-		syncFileRange: int64(syncFileRange),
+		t:                 tmp,
+		syncFileRange:     int64(syncFileRange),
+		flagSyncFileRange: getSyncFileRangeFlag(flagSyncFileRange),
 	}
 }
 
 func (w *FsyncFadviceWriter) sync() (err error) {
-	if err = syncFileRange(int(w.t.f.Fd()), w.syncOffset, w.syncLen, SYNC_FILE_RANGE_WRITE); err != nil {
+	if err = syncFileRange(int(w.t.f.Fd()), w.syncOffset, w.syncLen, w.flagSyncFileRange); err != nil {
 		err = errors.Wrap(err, "call sync_file_range")
 		return
 	}

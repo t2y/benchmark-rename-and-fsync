@@ -14,7 +14,7 @@ build:
 
 test:
 	rm -rf $(UNITTEST_DIR)
-	go test . -v -testDir $(UNITTEST_DIR) -syncFileRange 102400
+	go test . -v -testDir $(UNITTEST_DIR) -syncFileRange 102400 -syncFileRangeFlag write
 
 bench:
 	rm -rf $(BENCHTEST_DIR)
