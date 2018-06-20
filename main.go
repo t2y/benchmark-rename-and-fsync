@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"math"
 	"sync"
 	"time"
 )
@@ -21,6 +22,7 @@ var (
 
 	concurrent int
 	duration   time.Duration
+	verbose    bool
 )
 
 type benchmarkFunc func(context.Context, int) int
@@ -31,7 +33,7 @@ func getBenchmark() (f benchmarkFunc) {
 		return runBenchmarkNoSyncWriter
 	case "fsync":
 		return runBenchmarkFsyncWriter
-	case "fsync+fadvice":
+	case "fsyn+fadv":
 		return runBenchmarkFsyncFadviceWriter
 	default:
 		log.Fatalf("unknown benchmark function: %s", benchmark)
@@ -44,10 +46,11 @@ func initFlags() {
 	flag.StringVar(&testDir, "testDir", "testdata", "test data directory")
 	flag.StringVar(&flagSyncFileRange, "syncFileRangeFlag", "write", "flag for sync_file_range")
 	flag.IntVar(&argSyncFileRange, "syncFileRange", defaultSyncFileRange, "size of sync_file_range(B)")
-	flag.StringVar(&benchmark, "benchmark", "", "choose nosync|fsync|fsync+fadvice")
+	flag.StringVar(&benchmark, "benchmark", "", "choose nosync|fsync|fsyn+fadv")
 
-	flag.IntVar(&concurrent, "concurrent", 8, "number of goroutines")
+	flag.IntVar(&concurrent, "concurrent", 2, "number of goroutines")
 	flag.DurationVar(&duration, "duration", 3*time.Second, "run benchmark (e.g. 10s, 1m)")
+	flag.BoolVar(&verbose, "verbose", false, "set verbose mode")
 }
 
 func main() {
@@ -68,7 +71,9 @@ func main() {
 		go func(i int) {
 			defer wg.Done()
 			numberOfCreated := benchmarkFunc(ctx, i)
-			log.Printf("goroutine %d, number of created: %d\n", i, numberOfCreated)
+			if verbose {
+				log.Printf("goroutine %d, number of created: %d\n", i, numberOfCreated)
+			}
 			resultCh <- numberOfCreated
 		}(i)
 	}
@@ -84,5 +89,10 @@ func main() {
 	}
 	close(resultCh)
 
+	filesPerSec := float64(total) / elapsedTime.Seconds()
+	nanoSecPerFile := elapsedTime.Nanoseconds() / int64(total)
+
 	log.Printf("total number of created: %d", total)
+	log.Printf("- files/second: %v", math.Floor(filesPerSec+0.5))
+	log.Printf("- milliseconds/file: %v", nanoSecPerFile)
 }
