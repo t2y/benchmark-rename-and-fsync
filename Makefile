@@ -16,21 +16,46 @@ test:
 	rm -rf $(UNITTEST_DIR)
 	go test . -v -testDir $(UNITTEST_DIR) -syncFileRange 102400 -syncFileRangeFlag write
 
-bench:
+test-bench:
 	rm -rf $(BENCHTEST_DIR)
-	go test -v -benchmem -bench . -testDir $(BENCHTEST_DIR) -count 3 -cpu 4 -benchtime 1s -size 4 -run Benchmark*
+	./main -testDir $(BENCHTEST_DIR) -concurrent 32 -duration 1s -size 1 -benchmark nosync
+	./main -testDir $(BENCHTEST_DIR) -concurrent 32 -duration 1s -size 1 -benchmark fsync
+	./main -testDir $(BENCHTEST_DIR) -concurrent 32 -duration 1s -size 1 -benchmark fsyn+fadv
 
-1KB:
-	go test -bench . -v -benchmem -run Benchmark* -benchtime 5s -size 1
+NOSYNC_DIR := nosync-testdata
+FSYNC_DIR := fsync-testdata
+FADV_DIR := fsyn+fadv-testdata
 
-100KB:
-	go test -bench . -v -benchmem -run Benchmark* -benchtime 5s -size 100
+DATETIME := $(shell date +"%Y%m%d%H%M%S")
+IOSTAT_LOG := iostat-$(DATETIME).log
+SLEEP_TIME := 60
 
-1MB:
-	go test -bench . -v -benchmem -run Benchmark* -benchtime 5s -size 1024
+bench: clean-data
+	iostat -ymxt 1 /dev/sdk > $(IOSTAT_LOG) &
+	# fsync + fadvice
+	@date +"%Y%m%d%H%M%S"
+	./main -testDir $(FADV_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -benchmark fsyn+fadv
+	@date +"%Y%m%d%H%M%S"
+	@echo
+	sleep $(SLEEP_TIME)
+	@echo
+	# fsync
+	@date +"%Y%m%d%H%M%S"
+	./main -testDir $(FSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -benchmark fsync
+	@date +"%Y%m%d%H%M%S"
+	@echo
+	sleep $(SLEEP_TIME)
+	@echo
+	# without fsync
+	@date +"%Y%m%d%H%M%S"
+	./main -testDir $(NOSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -benchmark nosync
+	@date +"%Y%m%d%H%M%S"
+	sleep $(SLEEP_TIME)
+	@pkill iostat
+	@echo $(IOSTAT_LOG)
 
-1MBover:
-	go test -bench . -v -benchmem -run Benchmark* -benchtime 5s -size 1025
+clean-data:
+	@rm -rf $(UNITTEST_DIR) $(BENCHTEST_DIR) $(NOSYNC_DIR) $(FSYNC_DIR) $(FADV_DIR)
 
 clean:
 	rm -f main
