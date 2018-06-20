@@ -94,5 +94,5 @@ func main() {
 
 	log.Printf("total number of created: %d", total)
 	log.Printf("- files/second: %v", math.Floor(filesPerSec+0.5))
-	log.Printf("- milliseconds/file: %v", nanoSecPerFile)
+	log.Printf("- nanoseconds/file: %v", nanoSecPerFile)
 }
