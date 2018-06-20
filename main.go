@@ -91,8 +91,12 @@ func main() {
 
 	filesPerSec := float64(total) / elapsedTime.Seconds()
 	nanoSecPerFile := elapsedTime.Nanoseconds() / int64(total)
+	totalQuantity := float64(total*size*KiB) / 1024 / 1024
+	throughput := totalQuantity / elapsedTime.Seconds()
 
 	log.Printf("total number of created: %d", total)
 	log.Printf("- files/second: %v", math.Floor(filesPerSec+0.5))
 	log.Printf("- nanoseconds/file: %v", nanoSecPerFile)
+	log.Printf("- total quantity (MiB): %v", totalQuantity)
+	log.Printf("- throughput (MiB/sec): %v", throughput)
 }
