@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"io"
+	"log"
 
 	"github.com/pkg/errors"
 )
@@ -27,4 +30,37 @@ func (w *NoSyncWriter) Close() (err error) {
 		return
 	}
 	return
+}
+
+func createNoSyncFile(path string, size int) {
+	tmp, err := NewTempFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w := NewNoSyncWriter(tmp)
+	if _, err := io.CopyN(w, genData(size), int64(size)); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := w.Close(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runBenchmarkNoSyncWriter(ctx context.Context, n int) (i int) {
+	dir := ""
+	for {
+		select {
+		case <-ctx.Done():
+			return // expect timeout
+		default:
+			if i%1000 == 0 {
+				dir = makeDir(fmt.Sprintf("nosync-g%05d-%05d", n, i))
+			}
+			path := fmt.Sprintf("%s/%04d.txt", dir, i)
+			createNoSyncFile(path, size*KiB)
+			i += 1
+		}
+	}
 }

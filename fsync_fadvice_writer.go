@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"io"
+	"log"
 
 	"github.com/pkg/errors"
 )
@@ -60,4 +63,37 @@ func (w *FsyncFadviceWriter) Close() (err error) {
 		return
 	}
 	return
+}
+
+func createFsyncFadviceFile(path string, size, syncFileRange int, flagSyncFileRange string) {
+	tmp, err := NewTempFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w := NewFsyncFadviceWriter(tmp, syncFileRange, flagSyncFileRange)
+	if _, err := io.CopyN(w, genData(size), int64(size)); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := w.Close(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runBenchmarkFsyncFadviceWriter(ctx context.Context, n int) (i int) {
+	dir := ""
+	for {
+		select {
+		case <-ctx.Done():
+			return // expect timeout
+		default:
+			if i%1000 == 0 {
+				dir = makeDir(fmt.Sprintf("fsyn+fadv-g%05d-%05d", n, i))
+			}
+			path := fmt.Sprintf("%s/%04d.txt", dir, i)
+			createFsyncFadviceFile(path, size*KiB, argSyncFileRange, flagSyncFileRange)
+			i += 1
+		}
+	}
 }
