@@ -32,21 +32,23 @@ def parse_line(line):
 
 
 def main():
+    size = int(sys.argv[2])
     profile = defaultdict(int)
     with open(sys.argv[1]) as f:
         for line in f:
             end_date = parse_line(line)
-            profile[end_date] += 1
+            profile[end_date] += size
 
     calc_throughput(profile)
 
 
 def usage():
-    print('usage: python %s profile.csv' % __file__)
+    print('usage: python %s path/to/profile.csv file_size' % __file__)
+    print('       e.g.) python %s profile.csv 1' % __file__)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         usage()
         sys.exit(1)
     main()
