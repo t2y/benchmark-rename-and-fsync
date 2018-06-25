@@ -11,6 +11,7 @@ import (
 
 const (
 	defaultSyncFileRange = 1048576 // 1MiB
+	maxRandomDirNum      = 100000
 )
 
 var (
@@ -19,13 +20,14 @@ var (
 	argSyncFileRange  int
 	flagSyncFileRange string
 	benchmark         string
+	dirMaker          string
 
 	concurrent int
 	duration   time.Duration
 	verbose    bool
 )
 
-type benchmarkFunc func(context.Context, int) int
+type benchmarkFunc func(context.Context, chan string, int) int
 
 func getBenchmark() (f benchmarkFunc) {
 	switch benchmark {
@@ -41,12 +43,26 @@ func getBenchmark() (f benchmarkFunc) {
 	return
 }
 
+func getDirMaker() (m directoryMaker) {
+	switch dirMaker {
+	case "sequential":
+		return &SequentialDirMaker{prefix: benchmark}
+	case "random":
+		createRandomDirectory(benchmark)
+		return NewRandomDirMaker(benchmark)
+	default:
+		log.Fatalf("unknown directory maker: %s", dirMaker)
+	}
+	return
+}
+
 func initFlags() {
 	flag.IntVar(&size, "size", 1, "size of writing file (KB)")
 	flag.StringVar(&testDir, "testDir", "testdata", "test data directory")
 	flag.StringVar(&flagSyncFileRange, "syncFileRangeFlag", "write", "flag for sync_file_range")
 	flag.IntVar(&argSyncFileRange, "syncFileRange", defaultSyncFileRange, "size of sync_file_range(B)")
 	flag.StringVar(&benchmark, "benchmark", "", "choose nosync|fsync|fsyn+fadv")
+	flag.StringVar(&dirMaker, "dirMaker", "", "choose sequential|random")
 
 	flag.IntVar(&concurrent, "concurrent", 2, "number of goroutines")
 	flag.DurationVar(&duration, "duration", 3*time.Second, "run benchmark (e.g. 10s, 1m)")
@@ -57,9 +73,17 @@ func main() {
 	initFlags()
 	flag.Parse()
 
+	resultCh := make(chan int, concurrent)
 	benchmarkFunc := getBenchmark()
 
-	resultCh := make(chan int, concurrent)
+	dirMaker := getDirMaker()
+	pathCh := make(chan string, concurrent*2)
+	go func(dirMaker directoryMaker) {
+		for {
+			pathCh <- dirMaker.create()
+		}
+	}(dirMaker)
+
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 
@@ -70,7 +94,7 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			numberOfCreated := benchmarkFunc(ctx, i)
+			numberOfCreated := benchmarkFunc(ctx, pathCh, i)
 			if verbose {
 				log.Printf("goroutine %d, number of created: %d\n", i, numberOfCreated)
 			}

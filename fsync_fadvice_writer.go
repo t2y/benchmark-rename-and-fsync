@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 
@@ -81,17 +80,16 @@ func createFsyncFadviceFile(path string, size, syncFileRange int, flagSyncFileRa
 	}
 }
 
-func runBenchmarkFsyncFadviceWriter(ctx context.Context, n int) (i int) {
-	dir := ""
+func runBenchmarkFsyncFadviceWriter(ctx context.Context, pathCh chan string, n int) (i int) {
 	for {
 		select {
 		case <-ctx.Done():
 			return // expect timeout
 		default:
-			if i%1000 == 0 {
-				dir = makeDir(fmt.Sprintf("fsyn+fadv-g%05d-%05d", n, i))
+			path, ok := <-pathCh
+			if !ok {
+				return
 			}
-			path := fmt.Sprintf("%s/%04d.txt", dir, i)
 			createFsyncFadviceFile(path, size*KiB, argSyncFileRange, flagSyncFileRange)
 			i += 1
 		}

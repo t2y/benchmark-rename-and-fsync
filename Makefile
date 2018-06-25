@@ -34,21 +34,21 @@ bench: clean-data
 	iostat -ymxt 1 /dev/sdk > $(IOSTAT_LOG) &
 	# fsync + fadvice
 	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(FADV_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -benchmark fsyn+fadv
+	./main -testDir $(FADV_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsyn+fadv
 	@date +"%Y%m%d%H%M%S"
 	@echo
 	sleep $(SLEEP_TIME)
 	@echo
 	# fsync
 	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(FSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -benchmark fsync
+	./main -testDir $(FSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsync
 	@date +"%Y%m%d%H%M%S"
 	@echo
 	sleep $(SLEEP_TIME)
 	@echo
 	# without fsync
 	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(NOSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -benchmark nosync
+	./main -testDir $(NOSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
 	@date +"%Y%m%d%H%M%S"
 	sleep $(SLEEP_TIME)
 	@pkill iostat
