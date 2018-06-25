@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -80,7 +81,9 @@ func createFsyncFadviceFile(path string, size, syncFileRange int, flagSyncFileRa
 	}
 }
 
-func runBenchmarkFsyncFadviceWriter(ctx context.Context, pathCh chan string, n int) (i int) {
+func runBenchmarkFsyncFadviceWriter(
+	ctx context.Context, pathCh chan string, profileCh chan Profile, n int,
+) (i int) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -90,7 +93,13 @@ func runBenchmarkFsyncFadviceWriter(ctx context.Context, pathCh chan string, n i
 			if !ok {
 				return
 			}
+			startTime := time.Now()
 			createFsyncFadviceFile(path, size*KiB, argSyncFileRange, flagSyncFileRange)
+			elapsedTime := time.Since(startTime)
+			profileCh <- Profile{
+				startTime:   startTime,
+				elapsedTime: elapsedTime,
+			}
 			i += 1
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -47,7 +48,9 @@ func createNoSyncFile(path string, size int) {
 	}
 }
 
-func runBenchmarkNoSyncWriter(ctx context.Context, pathCh chan string, n int) (i int) {
+func runBenchmarkNoSyncWriter(
+	ctx context.Context, pathCh chan string, profileCh chan Profile, n int,
+) (i int) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -57,7 +60,13 @@ func runBenchmarkNoSyncWriter(ctx context.Context, pathCh chan string, n int) (i
 			if !ok {
 				return
 			}
+			startTime := time.Now()
 			createNoSyncFile(path, size*KiB)
+			elapsedTime := time.Since(startTime)
+			profileCh <- Profile{
+				startTime:   startTime,
+				elapsedTime: elapsedTime,
+			}
 			i += 1
 		}
 	}
