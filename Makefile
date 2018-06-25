@@ -55,11 +55,11 @@ bench: clean-data
 	@echo $(IOSTAT_LOG)
 
 clean-data:
-	rm -rf $(UNITTEST_DIR)
-	rm -rf $(BENCHTEST_DIR)
-	rm -rf $(NOSYNC_DIR)
-	rm -rf $(FSYNC_DIR)
-	rm -rf $(FADV_DIR)
+	@rm -rf $(UNITTEST_DIR)
+	@rm -rf $(BENCHTEST_DIR)
+	@rm -rf $(NOSYNC_DIR)
+	@rm -rf $(FSYNC_DIR)
+	@rm -rf $(FADV_DIR)
 
 clean:
-	rm -f main
+	@rm -f main
