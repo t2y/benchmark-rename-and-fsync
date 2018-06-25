@@ -9,13 +9,13 @@ def calc_throughput(profile):
 
     total = 0
     throughputs = []
-    for key in date_ranges:
-        total += profile[key]  # KB
-        t = key - start_date
+    for end_date in date_ranges:
+        total += profile[end_date]  # KB
+        t = end_date - start_date
         if t.seconds % 10 == 0 and t.seconds != 0:
             tp = round(total / (1024.0 * t.seconds), 2)
             throughputs.append(tp)
-            print('datetime:', key, 'throughput:', tp)
+            print('datetime:', end_date, 'throughput:', tp)
 
     print(','.join(str(i) for i in throughputs))
 
