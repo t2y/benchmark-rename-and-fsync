@@ -111,7 +111,7 @@ func main() {
 	}
 
 	go func() {
-		f, err := os.Create(testDir + "/profile.csv")
+		f, err := os.Create(fmt.Sprintf("./%s-profile.csv", benchmark))
 		if err != nil {
 			log.Fatal(err)
 		}
