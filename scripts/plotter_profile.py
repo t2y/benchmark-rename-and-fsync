@@ -28,9 +28,9 @@ class Plotter:
 def parse_line(line):
     # line format: 2018-06-26T00:32:21.500767889+09:00,5.555149\n
     row = line.rstrip().split(',')
-    date_str = row[0].split('+')[0][:19]  # strip milliseconds
+    date_str = row[0].split('+')[0][:26]  # strip nanoseconds
     millisec = float(row[1])
-    date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S')
+    date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%f')
     return date, millisec
 
 
