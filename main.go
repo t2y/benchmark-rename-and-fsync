@@ -11,7 +11,7 @@ import (
 
 const (
 	defaultSyncFileRange = 1048576 // 1MiB
-	maxRandomDirNum      = 100000
+	maxRandomDirNum      = 10000   // TODO: how to decide appropriate number
 )
 
 var (
