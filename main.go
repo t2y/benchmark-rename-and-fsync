@@ -126,7 +126,7 @@ func main() {
 				return
 			}
 
-			dateTime := profile.startTime.Format(time.RFC3339)
+			dateTime := profile.startTime.Format(time.RFC3339Nano)
 			elapsedTime := profile.elapsedTime.Seconds() * 1e3 // milliseconds
 			row := fmt.Sprintf("%s,%f\n", dateTime, elapsedTime)
 			f.WriteString(row)
