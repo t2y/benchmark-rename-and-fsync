@@ -5,17 +5,20 @@ from datetime import datetime, timedelta
 
 def calc_throughput(profile):
     date_ranges = sorted(profile.keys())
-    start_date = date_ranges[0]
+    prev_date = date_ranges[0]
+    end_date = date_ranges[-1]
 
-    total = 0
+    window_size = 10
     throughputs = []
-    for end_date in date_ranges:
-        total += profile[end_date]  # KB
-        t = end_date - start_date
-        if t.seconds % 10 == 0 and t.seconds != 0:
-            tp = round(total / (1024.0 * t.seconds), 2)
-            throughputs.append(tp)
-            print('datetime:', end_date, 'throughput:', tp)
+    while prev_date < end_date:
+        total = 0
+        for sec in range(1, 1 + window_size):
+            target_date = prev_date + timedelta(seconds=sec)
+            total += profile[target_date]  # KB
+        tp = round(total / (1024.0 * window_size), 2)
+        throughputs.append(tp)
+        # print('datetime:', target_date, 'throughput:', tp)
+        prev_date = target_date
 
     print(','.join(str(i) for i in throughputs))
 
