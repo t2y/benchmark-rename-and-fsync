@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"math"
-	"os"
 	"sync"
 	"time"
 )
@@ -29,7 +27,7 @@ var (
 	verbose    bool
 )
 
-type benchmarkFunc func(context.Context, chan string, chan Profile, int) int
+type benchmarkFunc func(context.Context, chan string, int) int
 
 func getBenchmark() (f benchmarkFunc) {
 	switch benchmark {
@@ -71,16 +69,10 @@ func initFlags() {
 	flag.BoolVar(&verbose, "verbose", false, "set verbose mode")
 }
 
-type Profile struct {
-	startTime   time.Time
-	elapsedTime time.Duration
-}
-
 func main() {
 	initFlags()
 	flag.Parse()
 
-	profileCh := make(chan Profile, concurrent)
 	resultCh := make(chan int, concurrent)
 	benchmarkFunc := getBenchmark()
 
@@ -102,36 +94,13 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			numberOfCreated := benchmarkFunc(ctx, pathCh, profileCh, i)
+			numberOfCreated := benchmarkFunc(ctx, pathCh, i)
 			if verbose {
 				log.Printf("goroutine %d, number of created: %d\n", i, numberOfCreated)
 			}
 			resultCh <- numberOfCreated
 		}(i)
 	}
-
-	go func() {
-		f, err := os.Create(fmt.Sprintf("./%s-profile.csv", benchmark))
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer func() {
-			f.Sync()
-			f.Close()
-		}()
-
-		for {
-			profile, ok := <-profileCh
-			if !ok {
-				return
-			}
-
-			dateTime := profile.startTime.Format(time.RFC3339Nano)
-			elapsedTime := profile.elapsedTime.Seconds() * 1e3 // milliseconds
-			row := fmt.Sprintf("%s,%f\n", dateTime, elapsedTime)
-			f.WriteString(row)
-		}
-	}()
 
 	wg.Wait()
 
@@ -143,7 +112,6 @@ func main() {
 		total += <-resultCh
 	}
 	close(resultCh)
-	close(profileCh)
 
 	filesPerSec := float64(total) / elapsedTime.Seconds()
 	nanoSecPerFile := elapsedTime.Nanoseconds() / int64(total)

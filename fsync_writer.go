@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"log"
-	"time"
 
 	"github.com/pkg/errors"
 )
@@ -96,7 +95,7 @@ func createFsyncFile(path string, size, syncFileRange int, flagSyncFileRange str
 }
 
 func runBenchmarkFsyncWriter(
-	ctx context.Context, pathCh chan string, profileCh chan Profile, n int,
+	ctx context.Context, pathCh chan string, n int,
 ) (i int) {
 	for {
 		select {
@@ -107,13 +106,7 @@ func runBenchmarkFsyncWriter(
 			if !ok {
 				return
 			}
-			startTime := time.Now()
 			createFsyncFile(path, size*KiB, argSyncFileRange, flagSyncFileRange)
-			elapsedTime := time.Since(startTime)
-			profileCh <- Profile{
-				startTime:   startTime,
-				elapsedTime: elapsedTime,
-			}
 			i += 1
 		}
 	}
