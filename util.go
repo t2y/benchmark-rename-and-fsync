@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 )
 
@@ -53,19 +54,26 @@ func (m *RandomDirMaker) create() (path string) {
 		dirNum  int
 		fileNum int
 	)
-	for {
-		dirNum = randomNumber(0, m.maxDirNum)
-		fileNum = m.dirs[dirNum]
-		if fileNum < 1000 {
-			m.dirs[dirNum] = fileNum + 1
-			break
-		}
+	dirNum = randomNumber(0, m.maxDirNum)
+	fileNum = m.dirs[dirNum]
+	m.dirs[dirNum] = fileNum + 1
+	path = fmt.Sprintf("%s/%s-%04d/%03d.txt", testDir, m.prefix, dirNum, fileNum)
+	return
+}
+
+func getMaxRandomDir() (n int) {
+	// 1 directory has about 1000 files
+	v := float64(defaultDiskThroughput*duration.Seconds()) / float64(size*KiB) / 1000.0
+	n = int(math.Floor(v + 0.5))
+	if n == 0 {
+		n = 1
 	}
-	path = fmt.Sprintf("%s/%s-%07d/%03d.txt", testDir, m.prefix, dirNum, fileNum)
 	return
 }
 
 func NewRandomDirMaker(prefix string) (m *RandomDirMaker) {
+	maxRandomDirNum := getMaxRandomDir()
+	log.Printf("number of random directories: %d", maxRandomDirNum)
 	dirs := make(map[int]int, maxRandomDirNum)
 	for i := 0; i < maxRandomDirNum; i++ {
 		dirs[i] = 0
@@ -79,8 +87,9 @@ func NewRandomDirMaker(prefix string) (m *RandomDirMaker) {
 }
 
 func createRandomDirectory(prefix string) {
+	maxRandomDirNum := getMaxRandomDir()
 	for i := 0; i < maxRandomDirNum; i++ {
-		path := fmt.Sprintf("%s/%s-%07d", testDir, prefix, i)
+		path := fmt.Sprintf("%s/%s-%04d", testDir, prefix, i)
 		if err := os.MkdirAll(path, 0755); err != nil {
 			log.Fatal(err)
 		}
