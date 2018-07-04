@@ -42,11 +42,11 @@ bench:
 	@echo
 	# without fsync
 	@date +"%Y%m%d%H%M%S"
-	./main -testDir ${DIR_NOSYNC} -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
+	./main -testDir ${DIR_NOSYNC} -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
 	@date +"%Y%m%d%H%M%S"
 	sleep $(SLEEP_TIME)
 	@pkill iostat
-	@echo $(IOSTAT_LOG)
+	@echo ${IOSTAT_LOGFILE}
 	@date +"%Y%m%d%H%M%S"
 
 
@@ -61,14 +61,14 @@ bench-bk: clean-data
 	@echo
 	# fsync
 	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(FSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsync
+	./main -testDir $(FSYNC_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsync
 	@date +"%Y%m%d%H%M%S"
 	@echo
 	sleep $(SLEEP_TIME)
 	@echo
 	# without fsync
 	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(NOSYNC_DIR) -concurrent $(CONCURRENT) -duration $(DURATION) -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
+	./main -testDir $(NOSYNC_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
 	@date +"%Y%m%d%H%M%S"
 	sleep $(SLEEP_TIME)
 	@pkill iostat
