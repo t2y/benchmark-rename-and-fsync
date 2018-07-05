@@ -27,7 +27,7 @@ FSYNC_DIR := fsync-testdata
 FADV_DIR := fsyn+fadv-testdata
 
 DATETIME := $(shell date +"%Y%m%d%H%M%S")
-IOSTAT_LOG := iostat-$(DATETIME).log
+IOSTAT_LOG := /tmp/iostat-$(DATETIME).log
 SLEEP_TIME := 60
 
 bench:
