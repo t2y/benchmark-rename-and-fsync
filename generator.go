@@ -14,6 +14,11 @@ const (
 	MiB = 1024 * KiB
 )
 
+var (
+	cacheData []byte
+	cached    bool
+)
+
 func randomBytes(n int) []byte {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -37,7 +42,14 @@ func genRandomSizes(n, min, max int) []int {
 }
 
 func genData(size int) io.Reader {
-	data := randomBytes(size)
+	var data []byte
+	if cached {
+		data = cacheData
+	} else {
+		data = randomBytes(size)
+		cacheData = data
+		cached = true
+	}
 	r := ioutil.NopCloser(bytes.NewReader(data))
 	return r
 }

@@ -7,6 +7,9 @@ import (
 	"math"
 	"sync"
 	"time"
+
+	"net/http"
+	_ "net/http/pprof"
 )
 
 const (
@@ -22,9 +25,10 @@ var (
 	benchmark         string
 	dirMaker          string
 
-	concurrent int
-	duration   time.Duration
-	verbose    bool
+	concurrent  int
+	duration    time.Duration
+	enablePprof bool
+	verbose     bool
 )
 
 type benchmarkFunc func(context.Context, chan string, int) int
@@ -66,12 +70,20 @@ func initFlags() {
 
 	flag.IntVar(&concurrent, "concurrent", 2, "number of goroutines")
 	flag.DurationVar(&duration, "duration", 3*time.Second, "run benchmark (e.g. 10s, 1m)")
+	flag.BoolVar(&enablePprof, "pprof", false, "enable pprof")
 	flag.BoolVar(&verbose, "verbose", false, "set verbose mode")
 }
 
 func main() {
 	initFlags()
 	flag.Parse()
+
+	if enablePprof {
+		go func() {
+			log.Println("enable pprorf")
+			log.Println(http.ListenAndServe("localhost:9090", nil))
+		}()
+	}
 
 	resultCh := make(chan int, concurrent)
 	benchmarkFunc := getBenchmark()
