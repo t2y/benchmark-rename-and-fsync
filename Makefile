@@ -28,51 +28,26 @@ FADV_DIR := fsyn+fadv-testdata
 
 DATETIME := $(shell date +"%Y%m%d%H%M%S")
 IOSTAT_LOG := /tmp/iostat-$(DATETIME).log
-SLEEP_TIME := 60
 
 bench:
 	@cat /proc/uptime
+	sync
 	iostat -ymxt 1 /dev/sdk > ${IOSTAT_LOGFILE} &
 	# fsync + fadvice
 	@date +"%Y%m%d%H%M%S"
 	./main -testDir ${DIR_FADV} -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsyn+fadv
 	@date +"%Y%m%d%H%M%S"
 	@echo
-	sleep $(SLEEP_TIME)
+	sync
 	@echo
 	# without fsync
 	@date +"%Y%m%d%H%M%S"
 	./main -testDir ${DIR_NOSYNC} -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
 	@date +"%Y%m%d%H%M%S"
-	sleep $(SLEEP_TIME)
 	@pkill iostat
 	@echo ${IOSTAT_LOGFILE}
 	@date +"%Y%m%d%H%M%S"
 
-
-bench-bk: clean-data
-	iostat -ymxt 1 /dev/sdk > $(IOSTAT_LOG) &
-	# fsync + fadvice
-	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(FADV_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsyn+fadv
-	@date +"%Y%m%d%H%M%S"
-	@echo
-	sleep $(SLEEP_TIME)
-	@echo
-	# fsync
-	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(FSYNC_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsync
-	@date +"%Y%m%d%H%M%S"
-	@echo
-	sleep $(SLEEP_TIME)
-	@echo
-	# without fsync
-	@date +"%Y%m%d%H%M%S"
-	./main -testDir $(NOSYNC_DIR) -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync
-	@date +"%Y%m%d%H%M%S"
-	sleep $(SLEEP_TIME)
-	@pkill iostat
-	@echo $(IOSTAT_LOG)
 
 clean-data:
 	@rm -rf $(UNITTEST_DIR)
