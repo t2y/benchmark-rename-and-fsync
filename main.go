@@ -25,6 +25,7 @@ var (
 	benchmark         string
 	dirMaker          string
 
+	server      bool
 	concurrent  int
 	duration    time.Duration
 	enablePprof bool
@@ -68,23 +69,14 @@ func initFlags() {
 	flag.StringVar(&benchmark, "benchmark", "", "choose nosync|fsync|fsyn+fadv")
 	flag.StringVar(&dirMaker, "dirMaker", "", "choose sequential|random")
 
+	flag.BoolVar(&server, "server", false, "set server mode")
 	flag.IntVar(&concurrent, "concurrent", 2, "number of goroutines")
 	flag.DurationVar(&duration, "duration", 3*time.Second, "run benchmark (e.g. 10s, 1m)")
 	flag.BoolVar(&enablePprof, "pprof", false, "enable pprof")
 	flag.BoolVar(&verbose, "verbose", false, "set verbose mode")
 }
 
-func main() {
-	initFlags()
-	flag.Parse()
-
-	if enablePprof {
-		go func() {
-			log.Println("enable pprorf")
-			log.Println(http.ListenAndServe("localhost:9090", nil))
-		}()
-	}
-
+func runLocalBench() {
 	resultCh := make(chan int, concurrent)
 	benchmarkFunc := getBenchmark()
 
@@ -135,4 +127,45 @@ func main() {
 	log.Printf("- nanoseconds/file: %v", nanoSecPerFile)
 	log.Printf("- total quantity (MiB): %v", totalQuantity)
 	log.Printf("- throughput (MiB/sec): %v", throughput)
+}
+
+func runServerBench() {
+	dirMaker := &SequentialDirMaker{prefix: "server"}
+	pathCh := make(chan string, concurrent*2)
+	go func(dirMaker directoryMaker) {
+		for {
+			pathCh <- dirMaker.create()
+		}
+	}(dirMaker)
+
+	http.Handle("/fsync", &fsyncFadviceHandler{
+		size:   size,
+		pathCh: pathCh,
+	})
+	http.Handle("/nosync", &nosyncHandler{
+		size:   size,
+		pathCh: pathCh,
+	})
+
+	if err := http.ListenAndServe(":8090", nil); err != nil {
+		log.Fatal("ListenAndServe:", err)
+	}
+}
+
+func main() {
+	initFlags()
+	flag.Parse()
+
+	if enablePprof {
+		go func() {
+			log.Println("enable pprorf")
+			log.Println(http.ListenAndServe("localhost:9090", nil))
+		}()
+	}
+
+	if server {
+		runServerBench()
+	} else {
+		runLocalBench()
+	}
 }
