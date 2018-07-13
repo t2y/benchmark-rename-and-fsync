@@ -131,7 +131,7 @@ func runLocalBench() {
 
 func runServerBench() {
 	dirMaker := &SequentialDirMaker{prefix: "server"}
-	pathCh := make(chan string, concurrent*2)
+	pathCh := make(chan string, 256)
 	go func(dirMaker directoryMaker) {
 		for {
 			pathCh <- dirMaker.create()
