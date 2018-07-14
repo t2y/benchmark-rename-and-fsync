@@ -48,19 +48,6 @@ func getBenchmark() (f benchmarkFunc) {
 	return
 }
 
-func getDirMaker() (m directoryMaker) {
-	switch dirMaker {
-	case "sequential":
-		return &SequentialDirMaker{prefix: benchmark}
-	case "random":
-		createRandomDirectory(benchmark)
-		return NewRandomDirMaker(benchmark)
-	default:
-		log.Fatalf("unknown directory maker: %s", dirMaker)
-	}
-	return
-}
-
 func initFlags() {
 	flag.IntVar(&size, "size", 1, "size of writing file (KB)")
 	flag.StringVar(&testDir, "testDir", "testdata", "test data directory")
@@ -76,17 +63,19 @@ func initFlags() {
 	flag.BoolVar(&verbose, "verbose", false, "set verbose mode")
 }
 
-func runLocalBench() {
-	resultCh := make(chan int, concurrent)
-	benchmarkFunc := getBenchmark()
-
-	dirMaker := getDirMaker()
-	pathCh := make(chan string, concurrent*2)
+func getPathChan(dirMaker directoryMaker) (pathCh chan string) {
+	pathCh = make(chan string, 256)
 	go func(dirMaker directoryMaker) {
 		for {
 			pathCh <- dirMaker.create()
 		}
 	}(dirMaker)
+	return
+}
+
+func runLocalBench(pathCh chan string) {
+	resultCh := make(chan int, concurrent)
+	benchmarkFunc := getBenchmark()
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
@@ -105,7 +94,6 @@ func runLocalBench() {
 			resultCh <- numberOfCreated
 		}(i)
 	}
-
 	wg.Wait()
 
 	elapsedTime := time.Since(startTime)
@@ -129,15 +117,7 @@ func runLocalBench() {
 	log.Printf("- throughput (MiB/sec): %v", throughput)
 }
 
-func runServerBench() {
-	dirMaker := &SequentialDirMaker{prefix: "server"}
-	pathCh := make(chan string, 256)
-	go func(dirMaker directoryMaker) {
-		for {
-			pathCh <- dirMaker.create()
-		}
-	}(dirMaker)
-
+func runServerBench(pathCh chan string) {
 	http.Handle("/fsync", &fsyncFadviceHandler{
 		size:   size,
 		pathCh: pathCh,
@@ -163,9 +143,22 @@ func main() {
 		}()
 	}
 
+	length := 256
+	if concurrent > length {
+		length = concurrent
+	}
+	pathCh := make(chan string, length)
+
+	maker := getDirMaker(dirMaker)
+	go func(maker directoryMaker) {
+		for {
+			pathCh <- maker.create()
+		}
+	}(maker)
+
 	if server {
-		runServerBench()
+		runServerBench(pathCh)
 	} else {
-		runLocalBench()
+		runLocalBench(pathCh)
 	}
 }
