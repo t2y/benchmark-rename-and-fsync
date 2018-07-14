@@ -127,7 +127,9 @@ func runServerBench(pathCh chan string) {
 		pathCh: pathCh,
 	})
 
-	if err := http.ListenAndServe(":8090", nil); err != nil {
+	addr := "localhost:8090"
+	log.Printf("server start at %s", addr)
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }
@@ -138,8 +140,9 @@ func main() {
 
 	if enablePprof {
 		go func() {
-			log.Println("enable pprorf")
-			log.Println(http.ListenAndServe("localhost:9090", nil))
+			addr := "localhost:9090"
+			log.Printf("enable pprof at %s\n", addr)
+			log.Println(http.ListenAndServe(addr, nil))
 		}()
 	}
 

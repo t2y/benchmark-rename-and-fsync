@@ -22,15 +22,9 @@ test-bench:
 	./main -testDir $(BENCHTEST_DIR) -concurrent 32 -duration 1s -size 1 -benchmark fsync
 	./main -testDir $(BENCHTEST_DIR) -concurrent 32 -duration 1s -size 1 -benchmark fsyn+fadv
 
-NOSYNC_DIR := nosync-testdata
-FSYNC_DIR := fsync-testdata
-FADV_DIR := fsyn+fadv-testdata
-
 DATETIME := $(shell date +"%Y%m%d%H%M%S")
-IOSTAT_LOG := /tmp/iostat-$(DATETIME).log
 
 bench:
-	@cat /proc/uptime
 	sync
 	iostat -ymxt 1 /dev/sdk > ${IOSTAT_LOGFILE} &
 	# fsync + fadvice
@@ -47,14 +41,6 @@ bench:
 	@pkill iostat
 	@echo ${IOSTAT_LOGFILE}
 	@date +"%Y%m%d%H%M%S"
-
-
-clean-data:
-	@rm -rf $(UNITTEST_DIR)
-	@rm -rf $(BENCHTEST_DIR)
-	@rm -rf $(NOSYNC_DIR)
-	@rm -rf $(FSYNC_DIR)
-	@rm -rf $(FADV_DIR)
 
 clean:
 	@rm -f main
