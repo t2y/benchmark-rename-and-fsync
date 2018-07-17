@@ -34,6 +34,13 @@ bench:
 	@echo
 	sync
 	@echo
+	# fsync
+	@date +"%Y%m%d%H%M%S"
+	./main -testDir ${DIR_FSYNC} -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsync
+	@date +"%Y%m%d%H%M%S"
+	@echo
+	sync
+	@echo
 	# without fsync
 	@date +"%Y%m%d%H%M%S"
 	./main -testDir ${DIR_NOSYNC} -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark nosync

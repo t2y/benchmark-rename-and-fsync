@@ -6,7 +6,7 @@ DURATION="2m"
 
 CONCURRENTS=(32 64 128 256 512 1024)
 LOCATIONS=("sequential" "random")
-SIZES=(1 4 10 100)
+SIZES=(1 10 100)
 
 echo "top test directory: $TOP_DIR"
 if [ ! -d "$TOP_DIR" ]; then
@@ -24,8 +24,9 @@ for concurrent in "${CONCURRENTS[@]}"; do
             now=$(date +"%Y%m%d%H%M%S")
             iostat_logfile="${TMP_DIR}/iostat-${prefix}-${now}.log"
             dir_fadv="${TOP_DIR}/fadv-${prefix}"
+            dir_fsync="${TOP_DIR}/fsync-${prefix}"
             dir_nosync="${TOP_DIR}/nosync-${prefix}"
-            make IOSTAT_LOGFILE="$iostat_logfile" DIR_FADV="$dir_fadv" DIR_NOSYNC="$dir_nosync" CONCURRENT=$concurrent DURATION=$DURATION SIZE=$size DIR_MAKER=$loc bench;
+            make IOSTAT_LOGFILE="$iostat_logfile" DIR_FADV="$dir_fadv" DIR_FSYNC="$dir_fsync" DIR_NOSYNC="$dir_nosync" CONCURRENT=$concurrent DURATION=$DURATION SIZE=$size DIR_MAKER=$loc bench;
             echo
             echo
         done
