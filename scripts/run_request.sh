@@ -1,17 +1,11 @@
 #!/bin/bash
 
-TOP_DIR=${1:-tdir}
 TMP_DIR="/tmp"
 DURATION="2m"
 RESULTS_PREFIX="results"
 
 RATES=($(seq 150 50 500))
 HANDLERS=("fsync" "nosync")
-
-echo "top test directory: $TOP_DIR"
-if [ ! -d "$TOP_DIR" ]; then
-    mkdir -p "$TOP_DIR"
-fi
 
 start=$(date +"%Y-%m-%d %H:%M:%S")
 echo "start requesting: $start"
