@@ -26,7 +26,7 @@ DATETIME := $(shell date +"%Y%m%d%H%M%S")
 
 bench:
 	sync
-	iostat -ymxt 1 /dev/sdk > ${IOSTAT_LOGFILE} &
+	iostat -ymxt 1 > ${IOSTAT_LOGFILE} &
 	# fsync + fadvice
 	@date +"%Y%m%d%H%M%S"
 	./main -testDir ${DIR_FADV} -concurrent ${CONCURRENT} -duration ${DURATION} -size ${SIZE} -dirMaker ${DIR_MAKER} -benchmark fsyn+fadv
