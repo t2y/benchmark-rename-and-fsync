@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"math"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -28,6 +29,7 @@ var (
 	server      bool
 	concurrent  int
 	duration    time.Duration
+	maxThreads  int
 	enablePprof bool
 	verbose     bool
 )
@@ -59,6 +61,7 @@ func initFlags() {
 	flag.BoolVar(&server, "server", false, "set server mode")
 	flag.IntVar(&concurrent, "concurrent", 2, "number of goroutines")
 	flag.DurationVar(&duration, "duration", 3*time.Second, "run benchmark (e.g. 10s, 1m)")
+	flag.IntVar(&maxThreads, "maxThreads", 10000, "maximum number of operating system threads in the program")
 	flag.BoolVar(&enablePprof, "pprof", false, "enable pprof")
 	flag.BoolVar(&verbose, "verbose", false, "set verbose mode")
 }
@@ -137,6 +140,8 @@ func runServerBench(pathCh chan string) {
 func main() {
 	initFlags()
 	flag.Parse()
+
+	debug.SetMaxThreads(maxThreads)
 
 	if enablePprof {
 		go func() {
